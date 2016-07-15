@@ -109,18 +109,22 @@ struct dirent *readdir(DIR *dirp) {
 	return ret;
 }
 
-char *strstr(const char *haystack, const char *needle) {
-    printf("In our own strstr, opening haystack %s, needle %s\n", haystack, needle);
-    __android_log_print(ANDROID_LOG_INFO, "ROOTCLOAK", "strstr(): haystack %s, needle %s", haystack, needle);
+int execl(const char *path, const char *arg, ...) {
+    printf("In our own execl, execl()'ing %s\n", path);
+    __android_log_print(ANDROID_LOG_INFO, "ROOTCLOAK", "execl(): path %s", path);
 
-    if (strcasecmp("su", needle) == 0 || strcasecmp("eu.chainfire.supersu", needle) == 0) {
-        __android_log_print(ANDROID_LOG_INFO, "ROOTCLOAK", "strstr(): Hiding su %s", haystack);
-        return NULL;
+    char *fname = basename(path);
+
+    if (strcasecmp("su", fname) == 0 || strcasecmp("daemonsu", fname) == 0 || strcasecmp("superuser.apk", fname) == 0) {
+        __android_log_print(ANDROID_LOG_INFO, "ROOTCLOAK", "execl(): Hiding su file %s", path);
+        errno = ENOENT;
+        return -1;
     }
 
-    static char *(*original_strstr)(const char*, const char*) = NULL;
-    if (!original_strstr) {
-        original_strstr = dlsym(RTLD_NEXT, "strstr");
+
+    static int (*original_execl)(const char *path, const char *arg, ...) = NULL;
+    if (!original_execl) {
+        original_execl = dlsym(RTLD_NEXT, "execl");
     }
-    return original_strstr(haystack, haystack);
+    return (int) original_execl(path, arg);
 }
