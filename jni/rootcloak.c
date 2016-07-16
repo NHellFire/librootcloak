@@ -130,11 +130,16 @@ int execl(const char *path, const char *arg, ...) {
     return (int) original_execl(path, arg);
 }
 
-char *strstr(const char *haystack, const char *needle) {
-    printf("In our own strstr, opening haystack %s, needle %s\n", haystack, needle);
+char *strstr (const char *haystack, const char *needle) {
+    printf("In our own strstr, haystack %s, needle %s\n", haystack, needle);
     __android_log_print(ANDROID_LOG_INFO, "ROOTCLOAK", "strstr(): haystack %s, needle %s", haystack, needle);
 
-    if (strcasecmp("su", needle) == 0 || strcasecmp("eu.chainfire.supersu", needle) == 0) {
+    static char *(*original_strcasestr)(const char*, const char*) = NULL;
+    if (!original_strcasestr) {
+        original_strcasestr = dlsym(RTLD_NEXT, "strcasestr");
+    }
+
+    if (strcasecmp("su", needle) == 0 || original_strcasestr(needle, "eu.chainfire.supersu") == 0) {
         __android_log_print(ANDROID_LOG_INFO, "ROOTCLOAK", "strstr(): Hiding su %s", haystack);
         return NULL;
     }
@@ -144,4 +149,21 @@ char *strstr(const char *haystack, const char *needle) {
         original_strstr = dlsym(RTLD_NEXT, "strstr");
     }
     return original_strstr(haystack, needle);
+}
+
+char *strcasestr (const char *haystack, const char *needle) {
+    printf("In our own strcasestr, haystack %s, needle %s\n", haystack, needle);
+    __android_log_print(ANDROID_LOG_INFO, "ROOTCLOAK", "strcasestr(): haystack %s, needle %s", haystack, needle);
+
+    static char *(*original_strcasestr)(const char*, const char*) = NULL;
+    if (!original_strcasestr) {
+        original_strcasestr = dlsym(RTLD_NEXT, "strcasestr");
+    }
+
+    if (strcasecmp("su", needle) == 0 || original_strcasestr(needle, "eu.chainfire.supersu") == 0) {
+        __android_log_print(ANDROID_LOG_INFO, "ROOTCLOAK", "strcasestr(): Hiding su %s", haystack);
+        return NULL;
+    }
+
+    return original_strcasestr(haystack, needle);
 }
