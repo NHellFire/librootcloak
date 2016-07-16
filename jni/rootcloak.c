@@ -108,3 +108,23 @@ struct dirent *readdir(DIR *dirp) {
 
 	return ret;
 }
+
+int execl(const char *path, const char *arg, ...) {
+    printf("In our own execl, execl()'ing %s\n", path);
+    __android_log_print(ANDROID_LOG_INFO, "ROOTCLOAK", "execl(): path %s", path);
+
+    char *fname = basename(path);
+
+    if (strcasecmp("su", fname) == 0 || strcasecmp("daemonsu", fname) == 0 || strcasecmp("superuser.apk", fname) == 0) {
+        __android_log_print(ANDROID_LOG_INFO, "ROOTCLOAK", "execl(): Hiding su file %s", path);
+        errno = ENOENT;
+        return -1;
+    }
+
+
+    static int (*original_execl)(const char *path, const char *arg, ...) = NULL;
+    if (!original_execl) {
+        original_execl = dlsym(RTLD_NEXT, "execl");
+    }
+    return (int) original_execl(path, arg);
+}
